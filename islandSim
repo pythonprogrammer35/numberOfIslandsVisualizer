@@ -7,8 +7,8 @@ def mapCreator(rows, cols):
     for i in range(rows):
         holder = []
         for j in range(cols):
-            coinFlip = random.randint(1,2)
-            if(coinFlip == 1):
+            coinFlip = random.randint(1,100)
+            if(coinFlip <= percent):
                 holder.append("1")
             else:
                 holder.append("0")
@@ -25,7 +25,11 @@ def adjacencyCreator(inputMap):
             adj[currPos] = []
             if(currVal == "1"):
                 #look around for neighbors
+                #normal directionList
                 directionList = [(1,0),(-1,0),(0,1),(0,-1)]
+
+                #for fun
+                #directionList = [(1,0),(-1,0),(0,1),(0,-1), (1,1), (-1,-1), (1,-1), (-1,1)]
                 for direction in directionList:
                     newPos = (currPos[0] + direction[0], currPos[1] + direction[1])
                     if(newPos[0] >= len(inputMap) or newPos[0] < 0):
@@ -49,12 +53,13 @@ pygame.init()
 SCREEN_WIDTH = 1000
 SCREEN_HEIGHT = 800
 
-blockSize = 50
+blockSize = 30
 blocksPerRow = (SCREEN_WIDTH//blockSize)
 rows = (SCREEN_HEIGHT//blockSize)
 print(blocksPerRow)
 print(rows)
 print(blocksPerRow*rows)
+percent = 40
 
 #temporarily locking the map
 ocean = mapCreator(rows, blocksPerRow)
@@ -109,13 +114,15 @@ while running:
                 pygame.draw.rect(screen, (255, 255, 0), (currCoords[0], currCoords[1], blockSize, blockSize))
             if((i,j) in queue):
                 pygame.draw.rect(screen, (0, 255, 0), (currCoords[0], currCoords[1], blockSize, blockSize))
+            if(i == currLoc[0] and j == currLoc[1]):
+                pygame.draw.rect(screen, (255, 0, 255), (currCoords[0], currCoords[1], blockSize, blockSize))
 
             currCoords[0] += blockSize + 1
         currCoords[0] = 0
         currCoords[1] += blockSize + 1
     
     if(pathfinding == False):
-        print(currLoc)
+        #print(currLoc)
         if(ocean[currLoc[0]][currLoc[1]] == "1" and ((currLoc[0],currLoc[1]) not in visitedIslands)):
             pathfinding = True
             queue.append((currLoc[0], currLoc[1]))
@@ -123,31 +130,33 @@ while running:
         else:
             if(currLoc[1] < len(ocean[0])-1):
                 currLoc[1] += 1
+                time.sleep(0.02)
             elif(currLoc[0] == len(ocean) - 1):
-                print(numIslands)
+                #print(numIslands)
                 break 
             else:
                 currLoc[1] = 0
                 currLoc[0] += 1
+
                 
     else:
-        print("cheek")
+        #print("cheek")
         if(queue):
-            print(queue)
+            #print(queue)
             currPos = queue.pop(0)
             for pos in adjMap[currPos]:
                 if(pos not in visitedIslands):
                     visitedIslands[pos] = 1
                     queue.append(pos)
-            time.sleep(0.001)
+            time.sleep(0.05)
                    
         else:
-            print("toad")
-            print(numIslands)
+            #print("toad")
+            #print(numIslands)
             numIslands += 1
             pathfinding = False
 
-    
+        #time.sleep(0.05)
     # Flip the display to show the newly drawn frame
     pygame.display.flip()
 
