@@ -1,0 +1,252 @@
+import random
+import pygame
+import time
+
+def islandMapper(ocean, currPos, adjMap):
+    islandSize = 0
+    visited = {currPos : 1}
+    queue = [currPos]
+
+    while queue:
+        currLoc = queue.pop(0)
+        islandSize += 1
+        for direction in adjMap[currLoc]:
+            if(direction not in visited):
+                visited[direction] = 1
+                queue.append(direction)
+    visitedCoords = []
+    
+    for pos in visited:
+        
+        visitedCoords.append(pos)
+    
+    return islandSize, visitedCoords
+
+
+
+
+def mapTrimmer(ocean, minSize, adjMap):
+    #goal: Traverse the ocean, when an island is found, map it
+
+    #If the size is less than minSize, delete it
+
+    ocean = ocean
+
+    for i in range(len(ocean)):
+        for j in range(len(ocean[0])):
+            if(ocean[i][j] == "1"):
+                size, locations = islandMapper(ocean, (i,j), adjMap)
+                if(size < minSize):
+                    for location in locations:
+                        ocean[location[0]][location[1]] = "0"
+    return ocean
+
+
+def mapCreator(rows, cols, minSize):
+    ocean = []
+
+    for i in range(rows):
+        holder = []
+        for j in range(cols):
+            holder.append("0")
+        ocean.append(holder)
+    
+
+    for i in range(rows):
+        
+        for j in range(cols):
+            coinFlip = random.randint(1,100)
+            lookDirections = [(-1,0),(0,-1)]
+            probability = 0
+            for x in range(len(lookDirections)):
+                currDirec = lookDirections[x]
+                currLook = (i+currDirec[0], j+currDirec[1])
+                if(ocean[currLook[0]][currLook[1]] == "1"):
+                    probability += 5
+            coinFlip -= probability 
+            if(coinFlip <= percent):
+                ocean[i][j] = "1"
+    #adjacency Creator
+    adj = {}
+    for i in range(len(ocean)):
+        row = ocean[i]
+        for j in range(len(row)):
+            currPos = (i,j)
+            currVal = row[j]
+            adj[currPos] = []
+            if(currVal == "1"):
+                #look around for neighbors
+                #normal directionList
+                directionList = [(1,0),(-1,0),(0,1),(0,-1)]
+
+                #for fun
+                #directionList = [(1,0),(-1,0),(0,1),(0,-1), (1,1), (-1,-1), (1,-1), (-1,1)]
+                for direction in directionList:
+                    newPos = (currPos[0] + direction[0], currPos[1] + direction[1])
+                    if(newPos[0] >= len(ocean) or newPos[0] < 0):
+                        pass
+                    elif(newPos[1] >= len(ocean[0]) or newPos[1] < 0):
+                        pass
+                    elif(ocean[newPos[0]][newPos[1]] == "1" and ((newPos[0],newPos[1]) not in adj[currPos])):
+                        adj[currPos].append(newPos)            
+    ocean = mapTrimmer(ocean, minSize, adj)
+                        
+
+
+            
+    return ocean,adj
+
+def adjacencyCreator(inputMap):
+    adj = {}
+    for i in range(len(inputMap)):
+        row = inputMap[i]
+        for j in range(len(row)):
+            currPos = (i,j)
+            currVal = row[j]
+            adj[currPos] = []
+            if(currVal == "1"):
+                #look around for neighbors
+                #normal directionList
+                directionList = [(1,0),(-1,0),(0,1),(0,-1)]
+
+                #for fun
+                #directionList = [(1,0),(-1,0),(0,1),(0,-1), (1,1), (-1,-1), (1,-1), (-1,1)]
+                for direction in directionList:
+                    newPos = (currPos[0] + direction[0], currPos[1] + direction[1])
+                    if(newPos[0] >= len(inputMap) or newPos[0] < 0):
+                        pass
+                    elif(newPos[1] >= len(inputMap[0]) or newPos[1] < 0):
+                        pass
+                    elif(inputMap[newPos[0]][newPos[1]] == "1" and ((newPos[0],newPos[1]) not in adj[currPos])):
+                        adj[currPos].append(newPos)
+    return adj
+
+
+
+# Initialize pygame
+pygame.init()
+
+# Constants
+SCREEN_WIDTH = 1000
+SCREEN_HEIGHT = 800
+
+blockSize = 50
+blocksPerRow = (SCREEN_WIDTH//blockSize)-1
+rows = (SCREEN_HEIGHT//blockSize)-1
+print(blocksPerRow)
+print(rows)
+print(blocksPerRow*rows)
+percent = 40
+
+#temporarily locking the map
+ocean, adjMap = mapCreator(rows, blocksPerRow, 6)
+#ocean = [['1', '1', '0', '0', '0', '0', '0', '0', '0'], ['1', '1', '0', '0', '0', '0', '0', '0', '0'], ['1', '1', '0', '0', '0', '0', '0', '0', '0'], ['0', '0', '0', '0', '0', '0', '0', '0', '0'], ['0', '0', '0', '0', '0', '0', '0', '0', '0'], ['0', '0', '0', '0', '0', '0', '0', '0', '0'], ['0', '0', '0', '0', '0', '0', '0', '0', '0'], ['0', '0', '0', '0', '0', '0', '0', '0', '0'], ['0', '0', '0', '0', '0', '0', '0', '0', '0']]
+
+print(ocean)
+
+#adjMap = adjacencyCreator(ocean)
+
+print(islandMapper(ocean, (0,0), adjMap))
+print("yee")
+print(adjMap)
+
+
+
+# Colors (R, G, B)
+BLACK = (0, 0, 0)
+WHITE = (255, 255, 255)
+
+# Setup display
+screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+pygame.display.set_caption("Pygame Template")
+clock = pygame.time.Clock()
+
+# Game loop
+running = True
+
+visitedIslands = {}
+
+pathfinding = False
+currLoc = [0,0]
+queue = []
+numIslands = 0
+play = False
+while running:
+    # 1. Event Handling
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_p:
+                play = not play
+
+    # 2. Game State / Update Logic
+    # (Update positions, scores, physics here)
+    # pathfinder will be here
+
+    # 3. Drawing / Rendering
+    screen.fill((0,0,0))  # Clear the screen
+
+    # (Draw game objects here)
+    # pygame.draw.rect(surface, color, (x, y, width, height), width=0)
+    currCoords = [0,0]
+    for i in range(rows):
+        for j in range(blocksPerRow):
+            if(i == currLoc[0] and j == currLoc[1]):
+                pygame.draw.rect(screen, (255, 0, 255), (currCoords[0], currCoords[1], blockSize, blockSize))
+            elif((i,j) in queue):
+                pygame.draw.rect(screen, (0, 255, 255), (currCoords[0], currCoords[1], blockSize, blockSize))
+            elif((i,j) in visitedIslands):
+                pygame.draw.rect(screen, (255, 255, 0), (currCoords[0], currCoords[1], blockSize, blockSize))
+            elif(ocean[i][j] == "1"):
+                pygame.draw.rect(screen, (255, 0, 0), (currCoords[0], currCoords[1], blockSize, blockSize))
+            
+
+
+            currCoords[0] += blockSize + 1
+        currCoords[0] = 0
+        currCoords[1] += blockSize + 1
+    if(play):
+        if(pathfinding == False):
+            #print(currLoc)
+            if(ocean[currLoc[0]][currLoc[1]] == "1" and ((currLoc[0],currLoc[1]) not in visitedIslands)):
+                pathfinding = True
+                queue.append((currLoc[0], currLoc[1]))
+                visitedIslands[(currLoc[0], currLoc[1])] = 1
+            else:
+                if(currLoc[1] < len(ocean[0])-1):
+                    currLoc[1] += 1
+                    time.sleep(0.02)
+                elif(currLoc[0] == len(ocean) - 1):
+                    print(numIslands)
+                    break 
+                else:
+                    currLoc[1] = 0
+                    currLoc[0] += 1
+
+                    
+        else:
+            #print("cheek")
+            if(queue):
+                #print(queue)
+                currPos = queue.pop(0)
+                for pos in adjMap[currPos]:
+                    if(pos not in visitedIslands):
+                        visitedIslands[pos] = 1
+                        queue.append(pos)
+                time.sleep(0.05)
+                    
+            else:
+                #print("toad")
+                #print(numIslands)
+                numIslands += 1
+                print(numIslands)
+                pathfinding = False
+
+        #time.sleep(0.05)
+    # Flip the display to show the newly drawn frame
+    pygame.display.flip()
+
+# Clean up
+#time.sleep(3)
+pygame.quit()
